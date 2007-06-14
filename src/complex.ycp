@@ -31,15 +31,106 @@
 
 textdomain "squidguard";
 
+import "CWM";
+import "CWMTab";
 import "Label";
 import "Popup";
 import "Wizard";
-import "Wizard_hw";
 import "Confirm";
 import "Squidguard";
 
 
 include "squidguard/helps.ycp";
+include "squidguard/dialogs.ycp";
+
+/**
+ * map with description of the tabs
+ */
+map tabs_description	= $[
+
+    "blacklist"	: $[
+	// tab header
+	"header"	: _("&Blacklist "),
+	// tab contents description: uses widget names from widget_descr map
+	"contents"	: `VBox (
+	    "blacklist_table",
+	    `HBox (
+		"add_button",
+		"edit_button",
+		"delete_button",
+		`Right ("reset_button")
+	    )
+	),
+	// widgets that are checked for events
+	"widget_names"	: [
+	    "blacklist_table",
+	    "add_button",
+	    "edit_button",
+	    "delete_button",
+	    "reset_button"
+	],
+    ],
+    "whitelist"	: $[
+	// tab header
+	"header"	: _("&Whitelist"),
+	"contents"	: `VBox (
+	    `HVCenter (`Label ("...... and whitelist"))
+	)
+    ],
+];
+
+
+/**
+ * map with description of all widgets
+ */
+map <string, map> widget_descr = $[
+
+    "blacklist_table" : $[
+        "widget"		: `custom,
+	"custom_widget"		: `VBox (
+	    // label (above table)
+	    `Left (`Label (_("Blacklisted Addresses"))),
+	    // table header
+	    `Table (`id ("table"), `opt (`notify), `header(_("URL")))
+	),
+	"init"			: InitBlacklistTable,
+	"handle"		: HandleInitBlacklistTable,
+	"handle_events"		: [ "table" ],
+	"help"          : _("<p>Here, configure the blacklist. Use <b>Add</b>, <b>Edit</b>, and <b>Delete</b> to modify list of URLs.</p>
+<p>Data are saved after pushing <b>Finish</b> button.</p>"),
+    ],
+    "add_button"   : $[
+	"widget"        : `push_button,
+	"label"         : Label::AddButton (),
+	"no_help"       : true,
+	"handle"        : HandleAddButton,
+	// only pushing the button is interesting event
+	"handle_events"	: [ "add_button" ],
+    ],
+    "edit_button"   : $[
+	"widget"        : `push_button,
+	"label"         : Label::EditButton (),
+	"no_help"       : true,
+	"handle_events"	: [ "edit_button" ],
+	"handle"        : HandleEditButton,
+    ],
+    "delete_button"   : $[
+	"widget"        : `push_button,
+	"label"         : Label::DeleteButton (),
+	"no_help"       : true,
+	"handle_events"	: [ "delete_button" ],
+	"handle"        : HandleDeleteButton,
+    ],
+    "reset_button"   : $[
+	"widget"        : `push_button,
+	// push button label
+	"label"         : _("Rese&t"),
+	"no_help"       : true,
+	"handle_events"	: [ "reset_button" ],
+//	"handle"        : HandleResetButton,
+    ],
+];
+
 
 /**
  * Return a modification status
@@ -47,10 +138,6 @@ include "squidguard/helps.ycp";
  */
 boolean Modified() {
     return Squidguard::Modified();
-}
-
-boolean ReallyAbort() {
-    return !Squidguard::Modified() || Popup::ReallyAbort(true);
 }
 
 boolean PollAbort() {
@@ -86,120 +173,37 @@ symbol WriteDialog() {
  */
 any SummaryDialog() {
 
-    /* Squidguard summary dialog caption */
+    // caption for the whole dialog
     string caption = _("Squidguard Configuration");
 
-    /* FIXME */
-    list summary = Squidguard::Summary();
-    list unconfigured = summary[1]:[];
-    string configured = summary[0]:"";
+    widget_descr["tab"] = CWMTab::CreateWidget($[
+        "tab_order"	: ["blacklist", "whitelist"],
+	"tabs"		: tabs_description,
+	"widget_descr"	: widget_descr,
+	"initial_tab"	: "blacklist",
+    ]);
+    Wizard::SetContentsButtons ("", `VBox (), "", Label::BackButton(), Label::NextButton());
 
-    /* Frame label */
-    term contents = Wizard_hw::DetectedContent(_("Squidguard to Configure"),
-	    unconfigured, false, configured);
+    // layout description of the main dialog
+    term contents	= `VBox (
+	`VSpacing (0.2),
+	"tab",
+	`VSpacing (0.2)
+    );
 
-    Wizard::SetContentsButtons(caption, contents, HELPS["summary"]:"",
-	    Label::BackButton(), Label::FinishButton());
-
-    any ret = nil;
-    while(true) {
-
-	ret = UI::UserInput();
-
-	/* abort? */
-	if(ret == `abort || ret == `cancel || ret == `back) {
-	    if(ReallyAbort()) break;
-	    else continue;
-	}
-        /* overview dialog */
-        else if(ret == `edit_button) {
-            ret = `overview;
-            break;
-        }
-        /* configure the selected device */
-        else if(ret == `configure_button) {
-	    // TODO FIXME: check for change of the configuration
-            any selected = UI::QueryWidget(`id(`detected_selbox), `CurrentItem);
-            if(selected == `other) {
-                ret = `other;
-            }
-            else {
-                ret = `configure;
-            }
-            break;
-        }
-        else if(ret == `next) {
-            break;
-        }
-        else {
-            y2error("unexpected retcode: %1", ret);
-            continue;
-        }
-    }
+    symbol ret = CWM::ShowAndRun ($[
+	"widget_names"		: [ "tab" ],
+	"widget_descr"		: widget_descr,
+	"contents"		: contents,
+	"caption"		: caption,
+	"back_button"		: Label::BackButton (),
+	"next_button"		: Label::FinishButton (),
+    ]);
+    y2milestone("Returning %1", ret);
 
     return ret;
 }
 
-/**
- * Overview dialog
- * @return dialog result
- */
-any OverviewDialog() {
-
-    /* Squidguard overview dialog caption */
-    string caption = _("Squidguard Overview");
-
-    list overview = Squidguard::Overview();
-
-    /* FIXME table header */
-    term contents = Wizard_hw::ConfiguredContent(
-	/* Table header */
-	`header(_("Number"), _("Squidguard")),
-	overview, nil, nil, nil, nil );
-
-    contents = Wizard_hw::SpacingAround(contents, 1.5, 1.5, 1.0, 1.0);
-
-    Wizard::SetContentsButtons(caption, contents, HELPS["overview"]:"",
-	    Label::BackButton(), Label::FinishButton());
-
-    any ret = nil;
-    while(true) {
-
-	ret = UI::UserInput();
-
-	/* abort? */
-	if(ret == `abort || ret == `cancel) {
-	    if(ReallyAbort()) break;
-	    else continue;
-	}
-        /* add */
-        else if(ret == `add_button) {
-	    /* FIXME */
-            ret = `add;
-            break;
-        }
-        /* edit */
-        else if(ret == `edit_button) {
-	    /* FIXME */
-            ret = `edit;
-            break;
-        }
-        /* delete */
-        else if(ret == `delete_button) {
-	    /* FIXME */
-            continue;
-        }
-        else if(ret == `next || ret == `back) {
-            break;
-        }
-        else {
-            y2error("unexpected retcode: %1", ret);
-            continue;
-        }
-    }
-
-    return ret;
-}
 
 /* EOF */
 }

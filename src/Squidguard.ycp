@@ -35,6 +35,7 @@
 module "Squidguard";
 textdomain "squidguard";
 
+import "PackageSystem";
 import "Progress";
 import "Report";
 import "Summary";
@@ -59,6 +60,12 @@ global boolean proposal_valid = false;
  * Don't run services and SuSEconfig, it's all done at one place.
  */
 global boolean write_only = false;
+
+// list of blacklisted urls
+global list<string> blacklist	= [];
+
+// list of whitelisted urls
+global list<string> whitelist	= [];
 
 /**
  * Abort function
@@ -87,26 +94,14 @@ global boolean Modified() {
     return modified;
 }
 
-// Settings: Define all variables needed for configuration of squidguard
-// TODO FIXME: Define all the variables necessary to hold
-// TODO FIXME: the configuration here (with the appropriate
-// TODO FIXME: description)
-// TODO FIXME: For example:
-//   /**
-//    * List of the configured cards.
-//    */
-//   list cards = [];
-//
-//   /**
-//    * Some additional parameter needed for the configuration.
-//    */
-//   boolean additional_parameter = true;
-
 /**
  * Read all squidguard settings
  * @return true on success
  */
 global boolean Read() {
+
+    if (!PackageSystem::CheckAndInstallPackagesInteractive (["squidGuard"]))
+	return false;
 
     /* Squidguard read dialog caption */
     string caption = _("Initializing squidguard Configuration");
@@ -114,7 +109,7 @@ global boolean Read() {
     // TODO FIXME Set the right number of stages
     integer steps = 4;
 
-    integer sl = 500;
+    integer sl = 100;
     sleep(sl);
 
     // TODO FIXME Names of real stages
@@ -142,6 +137,9 @@ global boolean Read() {
     // read database
     if(Abort()) return false;
     Progress::NextStage();
+
+    // TODO read black and white list here
+
     /* Error message */
     if(false) Report::Error(_("Cannot read database1."));
     sleep(sl);
@@ -189,7 +187,7 @@ global boolean Write() {
     // TODO FIXME And set the right number of stages
     integer steps = 2;
 
-    integer sl = 500;
+    integer sl = 100;
     sleep(sl);
 
     // TODO FIXME Names of real stages

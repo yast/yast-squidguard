@@ -35,85 +35,7 @@ import "Sequencer";
 import "Wizard";
 
 include "squidguard/complex.ycp";
-include "squidguard/dialogs.ycp";
 
-/**
- * Add a configuration of squidguard
- * @return sequence result
- */
-any AddSequence() {
-
-    /* FIXME: adapt to your needs */
-    map aliases = $[
-	"config1"	: ``(Configure1Dialog()),
-	"config2"	: ``(Configure2Dialog()),
-    ];
-
-    /* FIXME: adapt to your needs */
-    map sequence = $[
-	"ws_start" : "config1",
-	"config1" : $[
-	    `abort	: `abort,
-	    `next	: "config2"
-	],
-	"config2" : $[
-	    `abort	: `abort,
-	    `next	: `next
-	]
-    ];
-
-    return Sequencer::Run(aliases, sequence);
-}
-
-/**
- * Main workflow of the squidguard configuration
- * @return sequence result
- */
-any MainSequence() {
-
-    /* FIXME: adapt to your needs */
-    map aliases = $[
-	"summary"	:   ``( SummaryDialog() ),
-	"overview"	:   ``( OverviewDialog() ),
-	"configure"	: [ ``( AddSequence() ), true ],
-	"add"		: [ ``( AddSequence() ), true ],
-	"edit"		: [ ``( AddSequence() ), true ]
-    ];
-
-    /* FIXME: adapt to your needs */
-    map sequence = $[
-	"ws_start" : "summary",
-	"summary" : $[
-	    `abort	: `abort,
-	    `next	: `next,
-	    `overview	: "overview",
-	    `configure	: "configure",
-	    `other	: "configure",
-	],
-	"overview" : $[
-	    `abort	: `abort,
-	    `next	: `next,
-	    `add	: "add",
-	    `edit	: "edit",
-	],
-	"configure" : $[
-	    `abort	: `abort,
-	    `next	: "summary",
-	],
-	"add" : $[
-	    `abort	: `abort,
-	    `next	: "overview",
-	],
-	"edit" : $[
-	    `abort	: `abort,
-	    `next	: "overview",
-	]
-    ];
-
-    any ret = Sequencer::Run(aliases, sequence);
-
-    return ret;
-}
 
 /**
  * Whole configuration of squidguard
@@ -122,9 +44,9 @@ any MainSequence() {
 any SquidguardSequence() {
 
     map aliases = $[
-	"read"	: [ ``( ReadDialog() ), true ],
-	"main"	:   ``( MainSequence() ),
-	"write"	: [ ``( WriteDialog() ), true ]
+	"read"	: [ ``( ReadDialog () ), true ],
+	"main"	:   ``( SummaryDialog () ),
+	"write"	: [ ``( WriteDialog () ), true ]
     ];
 
     map sequence = $[
@@ -167,7 +89,7 @@ any SquidguardAutoSequence() {
     Wizard::SetContentsButtons(caption, contents, "",
 	    Label::BackButton(), Label::NextButton());
 
-    any ret = MainSequence();
+    any ret = SummaryDialog ();
 
     UI::CloseDialog();
     return ret;
