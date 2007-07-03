@@ -48,11 +48,15 @@ boolean ReallyAbort() {
 /**
  * initialize the table with blacklist
  */
-define void InitBlacklistTable (string id) {
+define void InitTable (string id) {
 
-    list items = maplist (string url, (list<string>) Squidguard::blacklist, {
-	return `item (`id (url), url);
-    });
+    list items	= [];
+    if (CWMTab::CurrentTab () == "whitelist")
+	items = maplist (string url, (list<string>) Squidguard::whitelist,
+	    ``(`item (`id (url), url)));
+    else
+	items = maplist (string url, (list<string>) Squidguard::blacklist,
+	    ``(`item (`id (url), url)));
     UI::ChangeWidget (`id ("table"), `Items, items);
     UI::ChangeWidget (`id ("edit_button"), `Enabled, size (items) > 0);
     UI::ChangeWidget (`id ("delete_button"), `Enabled, size (items) > 0);
@@ -65,21 +69,18 @@ define void InitBlacklistTable (string id) {
  */
 define symbol HandleDeleteButton (string key, map event) {
 
-    string current_item	= (string) UI::QueryWidget (`id ("table"), `CurrentItem);
+    string current_item	= (string)UI::QueryWidget (`id ("table"), `CurrentItem);
     if (CWMTab::CurrentTab () == "whitelist")
     {
-	Squidguard::whitelist	= (list<string>) filter (string url, Squidguard::whitelist, {
-	    return url != current_item;
-	});
-//	InitWhitelistTable ("table");
+	Squidguard::whitelist	= (list<string>)
+	    filter (string url, Squidguard::whitelist, ``(url != current_item));
     }
     else
     {
-	Squidguard::blacklist	= (list<string>) filter (string url, Squidguard::blacklist, {
-	    return url != current_item;
-	});
-	InitBlacklistTable ("table");
+	Squidguard::blacklist	= (list<string>)
+	    filter (string url, Squidguard::blacklist, ``(url != current_item));
     }
+    InitTable ("table");
 
     return nil;
 }
@@ -89,12 +90,64 @@ define symbol HandleDeleteButton (string key, map event) {
  */
 define symbol HandleEditButton (string key, map event) {
 
-    string current	= (string) UI::QueryWidget (`id ("table"), `CurrentItem);
+    string current	= (string)UI::QueryWidget (`id ("table"), `CurrentItem);
+
+    UI::OpenDialog (`opt(`decorated), `HBox (`HSpacing (0.5), `VBox (
+	`VSpacing (0.5),
+	// textentry label
+	`TextEntry (`id (`url), _("&Modify URL"), current),
+	`HBox (
+	    `PushButton (`id(`ok),`opt(`key_F10, `default), Label::OKButton()),
+	    `PushButton (`id(`cancel),`opt(`key_F9), Label::CancelButton())
+	),
+	`VSpacing (0.5)), `HSpacing (0.5))
+    );
+    UI::SetFocus (`id (`url));
+    any ret	= nil;
+    string url	= "";
+    repeat
+    {
+	ret	= UI::UserInput ();
+	if (ret == `ok)
+	{
+	    url		= (string) UI::QueryWidget (`id(`url), `Value);
+	    if (url == "")
+	    {
+		ret	= `cancel;
+		break;
+	    }
+	    // check if url is valid
+	    if (!URL::Check (url))
+	    {
+		// popup message
+		Popup::Error (_("The entered URL is not valid."));
+		ret     = `notnext;
+		continue;
+	    }
+	}
+    } until (ret == `ok || ret == `cancel);
+    UI::CloseDialog ();
+    if (ret == `ok && url != current)
+    {
+	if (CWMTab::CurrentTab () == "blacklist")
+	{
+	    Squidguard::blacklist = (list<string>) union (
+		filter (string u, Squidguard::blacklist, ``(u != current)),
+		[ url ]);
+	}
+	else
+	{
+	    Squidguard::whitelist = (list<string>) union (
+		filter (string u, Squidguard::whitelist, ``(u != current)),
+		[ url ]);
+	}
+    }
+    InitTable ("table");
     return nil;
 }
 
 // handle table events (double click = edit button)
-define symbol HandleInitBlacklistTable (string key, map event) {
+define symbol HandleInitTable (string key, map event) {
 
     return HandleEditButton ("edit_button", $[]);
 }
@@ -105,9 +158,9 @@ define symbol HandleInitBlacklistTable (string key, map event) {
 define symbol HandleAddButton (string key, map event) {
 
     // popup label
-    string label	= _("Add new blacklist URL");
+    string label	= _("&Add new blacklist URL");
     if (CWMTab::CurrentTab () == "whitelist")
-	label	= _("Add new whitelist URL");
+	label	= _("&Add new whitelist URL");
 
     UI::OpenDialog (`opt(`decorated), `HBox (`HSpacing (0.5), `VBox (
 	`VSpacing (0.5),
@@ -148,15 +201,16 @@ define symbol HandleAddButton (string key, map event) {
 	if (CWMTab::CurrentTab () == "blacklist")
 	{
 	    // use union to filter out duplicates
-	    Squidguard::blacklist	= (list<string>) union (Squidguard::blacklist, [ url ]);
-	    InitBlacklistTable ("table");
+	    Squidguard::blacklist =
+		(list<string>) union (Squidguard::blacklist, [ url ]);
 	}
 	else
 	{
-	    Squidguard::whitelist	= (list<string>) union (Squidguard::whitelist, [ url ]);
-//	    InitWhitelistTable ("table");
+	    Squidguard::whitelist =
+		(list<string>) union (Squidguard::whitelist, [ url ]);
 	}
     }
+    InitTable ("table");
     return nil;
 }
 

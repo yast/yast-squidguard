@@ -73,9 +73,24 @@ map tabs_description	= $[
     "whitelist"	: $[
 	// tab header
 	"header"	: _("&Whitelist"),
+	// tab contents description: uses widget names from widget_descr map
 	"contents"	: `VBox (
-	    `HVCenter (`Label ("...... and whitelist"))
-	)
+	    "whitelist_table",
+	    `HBox (
+		"add_button",
+		"edit_button",
+		"delete_button",
+		`Right ("reset_button")
+	    )
+	),
+	// widgets that are checked for events
+	"widget_names"	: [
+	    "whitelist_table",
+	    "add_button",
+	    "edit_button",
+	    "delete_button",
+	    "reset_button"
+	],
     ],
 ];
 
@@ -89,14 +104,28 @@ map <string, map> widget_descr = $[
         "widget"		: `custom,
 	"custom_widget"		: `VBox (
 	    // label (above table)
-	    `Left (`Label (_("Blacklisted Addresses"))),
+	    `Left (`Label (_("Forbidden Addresses"))),
 	    // table header
 	    `Table (`id ("table"), `opt (`notify), `header(_("URL")))
 	),
-	"init"			: InitBlacklistTable,
-	"handle"		: HandleInitBlacklistTable,
+	"init"			: InitTable,
+	"handle"		: HandleInitTable,
 	"handle_events"		: [ "table" ],
 	"help"          : _("<p>Here, configure the blacklist. Use <b>Add</b>, <b>Edit</b>, and <b>Delete</b> to modify list of URLs.</p>
+<p>Data are saved after pushing <b>Finish</b> button.</p>"),
+    ],
+    "whitelist_table" : $[
+        "widget"		: `custom,
+	"custom_widget"		: `VBox (
+	    // label (above table)
+	    `Left (`Label (_("Allowed Addresses"))),
+	    // table header
+	    `Table (`id ("table"), `opt (`notify), `header(_("URL")))
+	),
+	"init"			: InitTable,
+	"handle"		: HandleInitTable,
+	"handle_events"		: [ "table" ],
+	"help"          : _("<p>Here, configure the whitelist. Use <b>Add</b>, <b>Edit</b>, and <b>Delete</b> to modify list of URLs.</p>
 <p>Data are saved after pushing <b>Finish</b> button.</p>"),
     ],
     "add_button"   : $[
@@ -124,7 +153,7 @@ map <string, map> widget_descr = $[
     "reset_button"   : $[
 	"widget"        : `push_button,
 	// push button label
-	"label"         : _("Rese&t"),
+	"label"         : _("R&eset"),
 	"no_help"       : true,
 	"handle_events"	: [ "reset_button" ],
 //	"handle"        : HandleResetButton,
