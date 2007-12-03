@@ -111,8 +111,9 @@ map <string, map> widget_descr = $[
 	"init"			: InitTable,
 	"handle"		: HandleInitTable,
 	"handle_events"		: [ "table" ],
-	"help"          : _("<p>Here, configure the blacklist. Use <b>Add</b>, <b>Edit</b>, and <b>Delete</b> to modify list of URLs.</p>
-<p>Data are saved after pushing <b>Finish</b> button.</p>"),
+	"help"          : _("<p>Here, configure the blacklist. Use <b>Add</b>, <b>Edit</b>, and <b>Delete</b> to modify the list of URLs.</p>
+<p>Data is saved after pushing the <b>Finish</b> button.</p>
+"),
     ],
     "whitelist_table" : $[
         "widget"		: `custom,
@@ -125,8 +126,9 @@ map <string, map> widget_descr = $[
 	"init"			: InitTable,
 	"handle"		: HandleInitTable,
 	"handle_events"		: [ "table" ],
-	"help"          : _("<p>Here, configure the whitelist. Use <b>Add</b>, <b>Edit</b>, and <b>Delete</b> to modify list of URLs.</p>
-<p>Data are saved after pushing <b>Finish</b> button.</p>"),
+	"help"          : _("<p>Here, configure the whitelist. Use <b>Add</b>, <b>Edit</b>, and <b>Delete</b> to modify the list of URLs.</p>
+<p>Data is saved after pushing the <b>Finish</b> button.</p>
+"),
     ],
     "add_button"   : $[
 	"widget"        : `push_button,

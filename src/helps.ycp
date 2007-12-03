@@ -78,7 +78,7 @@ the configuration opens.</p>
 
     /* Ovreview dialog help 1/3 */
     "overview" : _("<p><b><big>Squidguard Configuration Overview</big></b><br>
-Obtain an overview of installed squidguards. Additionally
+Obtain an overview of installed squidguards. Additionally,
 edit their configurations.<br></p>
 ") +
 
