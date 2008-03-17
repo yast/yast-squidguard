@@ -22,3 +22,4 @@ Exec=/sbin/yast2 squidguard
 Name=Squidguard
 GenericName=Configure SquidGuard Redirector
 X-KDE-SubstituteUID=true
+StartupNotify=true
