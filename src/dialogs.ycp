@@ -227,7 +227,7 @@ any Configure1Dialog () {
     /* Squidguard configure1 dialog contents */
     term contents = `Label (_("First part of configuration of squidguard"));
 
-    Wizard::SetContentsButtons(caption, contents, HELPS["c1"]:"",
+    Wizard::SetContentsButtons(caption, contents, "",
 	    Label::BackButton(), Label::NextButton());
 
     any ret = nil;
