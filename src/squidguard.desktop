@@ -17,9 +17,8 @@ X-SuSE-YaST-SortKey=
 X-SuSE-YaST-AutoInstResource=squidguard
 
 Icon=yast-squidguard
-Exec=/sbin/yast2 squidguard 
+Exec=xdg-su -c "/sbin/yast2 squidguard"
 
 Name=Squidguard
 GenericName=Configure SquidGuard Redirector
-X-KDE-SubstituteUID=true
 StartupNotify=true
