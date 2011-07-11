@@ -96,7 +96,7 @@ define symbol HandleEditButton (string key, map event) {
 	`VSpacing (0.5),
 	// textentry label
 	`TextEntry (`id (`url), _("&Modify URL"), current),
-	`HBox (
+	`ButtonBox (
 	    `PushButton (`id(`ok),`opt(`key_F10, `default), Label::OKButton()),
 	    `PushButton (`id(`cancel),`opt(`key_F9), Label::CancelButton())
 	),
@@ -165,7 +165,7 @@ define symbol HandleAddButton (string key, map event) {
     UI::OpenDialog (`opt(`decorated), `HBox (`HSpacing (0.5), `VBox (
 	`VSpacing (0.5),
 	`TextEntry (`id (`url), label),
-	`HBox (
+	`ButtonBox (
 	    `PushButton (`id(`ok),`opt(`key_F10, `default), Label::OKButton()),
 	    `PushButton (`id(`cancel),`opt(`key_F9), Label::CancelButton())
 	),
